@@ -16,18 +16,11 @@ class SSE < Goliath::API
   end
 
   def response(env)
-
+    ev=/(?<cmd>[A-Z]{3})-(?<code>\d{8})-(?<key>\d{3})-(?<data>\d{16})/.match(env['REQUEST_PATH'])
     logger.info "env request path = #{env['REQUEST_PATH']}"
     if env['REQUEST_PATH'] == '/'
       @@myenv = env
       [200, {'Content-Type' => 'text/html'}, File.open('public/index.html').read()]
-#    elsif env['REQUEST_PATH'] == '/events'
-#      logger.info "start response"
-#      streaming_response(200, {'Content-Type' => 'text/event-stream'})
-    elsif env['REQUEST_PATH'] == '/0'
-      @@myenv.stream_send("data:hello ##{rand(100)}\n\n") 
-    elsif env['REQUEST_PATH'] == '/1'
-      @@myenv.stream_send(["event:signup", "data:signup event ##{rand(100)}\n\n"].join("\n"))
     elsif env['REQUEST_PATH'] == '/events'
       unless env['HTTP_ACCEPT'] == 'text/event-stream'
         return [ 406, { }, [ ] ]
@@ -49,9 +42,11 @@ class SSE < Goliath::API
       end
     
       streaming_response(200, { 'Content-Type' => "text/event-stream" })
-    elsif env['REQUEST_PATH'] == '/message'
-      Pubsub.channel.pushone(2, "data:broadcasting message..\n\n")
+    elsif ev != nil
+      Pubsub.channel.pushone(Integer(ev["key"]), "data:broadcasting message..\n\n")
       [ 200, { }, [ ] ]
+    else
+      [ 200, { }, ["hello"] ]
     end
   end
 end
