@@ -1,10 +1,20 @@
+class MyEC < EventMachine::Channel
+
+def pushone(id, *items)
+  items = items.dup
+  EM.schedule { items.each { |i| @subs[id].call i  } }
+end
+
+end
+
+
 module Pubsub
   
   @@channel   = nil
   @@callbacks = { }
   
   def self.channel
-    @@channel ||= EventMachine::Channel.new
+    @@channel ||= MyEC.new
   end
   
   def self.callback(event, id, &block) 

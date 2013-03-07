@@ -38,7 +38,9 @@ class SSE < Goliath::API
       end
     
       env['pubsub.subscriber.id'] = sub_id
-    
+   
+      logger.info "sub_id = #{sub_id}"
+
       Pubsub.callback(:on_close, sub_id) do |e|
         if e['pubsub.subscriber.id'] == sub_id
           Pubsub.channel.unsubscribe(sub_id)
@@ -48,7 +50,7 @@ class SSE < Goliath::API
     
       streaming_response(200, { 'Content-Type' => "text/event-stream" })
     elsif env['REQUEST_PATH'] == '/message'
-      Pubsub.channel.push("data:broadcasting message..\n\n")
+      Pubsub.channel.pushone(2, "data:broadcasting message..\n\n")
       [ 200, { }, [ ] ]
     end
   end
